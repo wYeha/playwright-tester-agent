@@ -1,0 +1,7 @@
+{
+  "baseUrl": "{{BASE_URL}}",
+  "loginUrl": "{{LOGIN_URL}}",
+  "user": "CHANGE_ME",
+  "pass": "CHANGE_ME",
+  "_comment": "Скопируй в ~/.claude/agents/playwright-tester.auth.json и впиши реальные user/pass. Путь одинаков для Claude Code и Cursor — он захардкожен в scenarios/_auth.ts. loginUrl может быть абсолютным (auth на отдельном домене) или относительным (/login). Приоритет env: TEST_USER, TEST_PASS."
+}

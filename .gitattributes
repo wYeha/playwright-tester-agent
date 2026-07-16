@@ -1,0 +1,4 @@
+# CLI запускается через npx на любой ОС: шебанг с CRLF ломает Linux/WSL.
+# Прибиваем LF независимо от core.autocrlf у того, кто клонирует.
+* text=auto eol=lf
+*.png binary

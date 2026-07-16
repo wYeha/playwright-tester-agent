@@ -1,0 +1,27 @@
+{
+  "name": "playwright-tester-agent",
+  "version": "1.0.0",
+  "description": "Двухфазные E2E-тесты через ИИ-агентов: субагент проходит сценарий в живом браузере и подбирает локаторы, скилл превращает черновик в @playwright/test",
+  "bin": {
+    "playwright-tester-agent": "bin/agent-kit.js",
+    "agent-kit": "bin/agent-kit.js"
+  },
+  "files": [
+    "bin",
+    "templates",
+    "docs"
+  ],
+  "keywords": [
+    "playwright",
+    "e2e",
+    "testing",
+    "ai-agent",
+    "claude-code",
+    "cursor",
+    "mcp"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
