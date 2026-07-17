@@ -57,7 +57,7 @@ scenarios/_TEMPLATE/scenario.md              ← образец сценария
 playwright.config.ts
 .mcp.json  .cursor/mcp.json                  ← конфиги MCP (форматы разные!)
 scripts/playwright-verify.js
-.claude/agents/playwright-tester.auth.example.json
+scenarios/auth.example.json
 ```
 
 `scenarios/_auth.ts` **не создаётся намеренно** — его напишет фаза 2 под форму входа именно
@@ -89,20 +89,21 @@ npx github:wYeha/playwright-tester-agent update
   MCP подхватывается **при старте сессии**. Сервера не было → инструменты не появятся,
   и перезапуски внутри сессии не помогут.
 
-- Креды для авто-логина — **один файл на все проекты**, лежит вне репозитория:
+- Креды для авто-логина — **свои у каждого проекта**, лежат внутри него:
 
   ```bash
-  mkdir -p ~/.claude/agents
-  cp .claude/agents/playwright-tester.auth.example.json \
-     ~/.claude/agents/playwright-tester.auth.json
+  cp scenarios/auth.example.json scenarios/auth.json
   ```
 
   Вписать нужно **два поля**: `user` и `pass`. Третье, `loginUrl`, подставляет `init` из
   `--login-url` — проверьте, что оно верное. Адрес приложения здесь не указывается,
-  он берётся из `playwright.config.ts`.
+  он берётся из `playwright.config.ts`. Заполнить нужно **до первого `/test-scenario`**.
 
-  Путь одинаков для Claude Code и Cursor: он захардкожен в коде и читается даже при запуске
-  `npx playwright test` из обычного терминала. Заполнить нужно **до первого `/test-scenario`**.
+  > **Файл с паролем лежит в проекте.** От коммита его удерживает только строка
+  > `scenarios/auth.json` в `.gitignore` — не добавляйте его через `git add -f`.
+  > Это осознанный размен: взамен у каждого проекта свои креды и свой `loginUrl`.
+  > Перебить логин и пароль можно через переменные `TEST_USER` / `TEST_PASS` —
+  > в CI лучше так, файл там не нужен вовсе.
 
 ## Цикл работы
 

@@ -1,0 +1,6 @@
+{
+  "loginUrl": "{{LOGIN_URL}}",
+  "user": "CHANGE_ME",
+  "pass": "CHANGE_ME",
+  "_comment": "ОБРАЗЕЦ. Скопируй рядом как scenarios/auth.json и впиши user/pass. auth.json в .gitignore — в репозиторий не попадёт, но лежит внутри проекта, так что следи, чтобы не закоммитить принудительно. У каждого проекта свои креды и свой loginUrl. loginUrl — абсолютный (вход на отдельном домене) или относительный (/login). Перебить логин/пароль можно через env: TEST_USER, TEST_PASS. Адрес приложения здесь НЕ указывается — он в playwright.config.ts."
+}

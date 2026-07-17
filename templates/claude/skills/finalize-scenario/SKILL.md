@@ -45,7 +45,7 @@ description: >-
    НЕ переносится — его роль берёт на себя тест-раннер; `loadCreds` переезжает в хелпер (см. п.2).
 
 2. **Вынеси авторизацию в хелпер `scenarios/_auth.ts`** (один на все сценарии), туда же `loadCreds`
-   (креды по-прежнему из `~/.claude/agents/playwright-tester.auth.json`, с приоритетом env
+   (креды по-прежнему из `scenarios/auth.json`, с приоритетом env
    `TEST_USER`/`TEST_PASS`). Сигнатура: `export async function ensureAuth(page: Page): Promise<void>`.
 
 2а. **`test` и `expect` импортируй из `../_fixtures`, а НЕ из `@playwright/test`.**
@@ -78,7 +78,7 @@ description: >-
     *   npx playwright test scenarios/<имя>/final.spec.ts --ui       # UI Mode: разбор ЗАПИСИ прогона, не живой браузер
     *
     * Переопределить стенд: BASE_URL=http://… npx playwright test …
-    * Креды: ~/.claude/agents/playwright-tester.auth.json (или env TEST_USER / TEST_PASS).
+    * Креды: scenarios/auth.json (или env TEST_USER / TEST_PASS).
     */
    ```
    Про `--headed` / `--ui` в шапке пиши именно так, с пояснением: по умолчанию раннер работает

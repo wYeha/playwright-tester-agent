@@ -85,12 +85,14 @@ is_background: false
 
 ## Креды и авто-логин (проверка при каждом прогоне, без storageState)
 
-Креды лежат в файле субагента:
-`<HOME>/.claude/agents/playwright-tester.auth.json` (в коде — через `os.homedir()`), формат:
+Креды лежат **внутри проекта**: `scenarios/auth.json` (в `.gitignore`, в репозиторий не
+попадает). У каждого проекта свой файл и свой `loginUrl`. Формат:
 ```json
-{ "loginUrl": "/login", "user": "admin@example.com", "pass": "adminQWE123" }
+{ "loginUrl": "/login", "user": "user@example.com", "pass": "secret" }
 ```
 Приоритет: переменные окружения `TEST_USER`/`TEST_PASS` (если заданы) → иначе файл.
+Рядом лежит `scenarios/auth.example.json` — образец, который копируют при развёртывании.
+Файла нет → сообщи об этом и остановись, сам его не создавай (пароля ты не знаешь).
 
 **Порядок:** до шагов сценария один раз исследуй форму логина в MCP-браузере (найди поля
 email/password и кнопку сабмита по видимому тексту/типам инпутов), затем запиши функцию
@@ -126,13 +128,16 @@ email/password и кнопку сабмита по видимому тексту
 ```js
 // draft.js — ЧЕРНОВИК фазы 1 (субагент playwright-tester). Чистовик делает finalize-scenario.
 const { chromium } = require('playwright');
-const os = require('os'), path = require('path'), fs = require('fs');
+const path = require('path'), fs = require('fs');
 
 const BASE_URL = process.env.BASE_URL || '<<ПОДСТАВЬ baseUrl из scenario.md>>';
 const HEADLESS = process.env.HEADLESS !== '0';
 
 function loadCreds() {
-  const f = path.join(os.homedir(), '.claude', 'agents', 'playwright-tester.auth.json');
+  const f = path.join(__dirname, '..', 'auth.json');   // scenarios/auth.json, в .gitignore
+  if (!fs.existsSync(f) && !process.env.TEST_USER) {
+    throw new Error('нет scenarios/auth.json — скопируй scenarios/auth.example.json и впиши user/pass');
+  }
   const j = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : {};
   return { loginUrl: j.loginUrl || '/login',
            user: process.env.TEST_USER || j.user,
