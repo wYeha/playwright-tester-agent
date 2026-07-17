@@ -1,7 +1,6 @@
 {
-  "baseUrl": "{{BASE_URL}}",
   "loginUrl": "{{LOGIN_URL}}",
   "user": "CHANGE_ME",
   "pass": "CHANGE_ME",
-  "_comment": "Скопируй в ~/.claude/agents/playwright-tester.auth.json и впиши реальные user/pass. Путь одинаков для Claude Code и Cursor — он захардкожен в scenarios/_auth.ts. loginUrl может быть абсолютным (auth на отдельном домене) или относительным (/login). Приоритет env: TEST_USER, TEST_PASS."
+  "_comment": "ОБРАЗЕЦ. Рабочий файл: ~/.claude/agents/playwright-tester.auth.json — создай папку (mkdir -p ~/.claude/agents), скопируй туда этот файл и впиши user/pass. Путь одинаков для Claude Code и Cursor: он захардкожен в коде и читается даже при запуске npx playwright test из обычного терминала. loginUrl — абсолютный (auth на отдельном домене) или относительный (/login); проверь, что он верный. Переопределить логин/пароль можно через env: TEST_USER, TEST_PASS. Адрес приложения здесь НЕ указывается — он берётся из playwright.config.ts."
 }

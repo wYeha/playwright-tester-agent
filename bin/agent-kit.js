@@ -140,13 +140,14 @@ function init(args) {
     console.error('Ошибка: нужен --base-url, например --base-url http://app.local');
     process.exit(1);
   }
-  const loginUrl = args['login-url'] === undefined || args['login-url'] === true ? '/login' : args['login-url'];
+  const loginUrlGiven = args['login-url'] !== undefined && args['login-url'] !== true;
+  const loginUrl = loginUrlGiven ? args['login-url'] : '/login';
   const vars = { BASE_URL: baseUrl, LOGIN_URL: loginUrl };
   const force = !!args.force;
 
   console.log(`Разворачиваю в: ${target}`);
   console.log(`  baseUrl:  ${baseUrl}`);
-  console.log(`  loginUrl: ${loginUrl}\n`);
+  console.log(`  loginUrl: ${loginUrl}${loginUrlGiven ? '' : '   ← ДЕФОЛТ, не задан через --login-url'}\n`);
 
   const state = loadState(target) || { version: 1, files: {} };
   const skipped = [];
@@ -179,16 +180,36 @@ function init(args) {
   console.log(`
 Готово. Дальше:
 
-  1. npm install && npm run playwright:install
-  2. Креды: скопируй .claude/agents/playwright-tester.auth.example.json
-     → ~/.claude/agents/playwright-tester.auth.json, впиши user/pass
-  3. MCP-сервер В ОТДЕЛЬНОМ ТЕРМИНАЛЕ, до запуска агента:  npm run playwright:mcp
-  4. Перезапусти Claude Code / Cursor (MCP подхватывается при старте сессии)
-  5. Напиши сценарий в scenarios/<имя>/scenario.md по образцу scenarios/_TEMPLATE/
-  6. /test-scenario <имя>  →  /finalize-scenario <имя>  →  npx playwright test
+  1. Зависимости:
+       npm install && npm run playwright:install
+
+  2. Креды (ОДИН файл на все проекты, лежит вне репозитория):
+       mkdir -p ~/.claude/agents
+       cp .claude/agents/playwright-tester.auth.example.json \\
+          ~/.claude/agents/playwright-tester.auth.json
+     Затем впиши в него ДВА поля: user и pass. Больше в нём менять нечего —
+     адрес приложения берётся из playwright.config.ts, а не отсюда.
+     Заполнить нужно ДО первого /test-scenario: агент полезет логиниться сразу.
+
+  3. MCP-сервер В ОТДЕЛЬНОМ ТЕРМИНАЛЕ, до запуска агента:
+       npm run playwright:mcp
+     Порт 8931 общий: одновременно с другим проектом не поднимется.
+
+  4. Перезапусти Claude Code / Cursor — MCP подхватывается при старте сессии.
+
+  5. Сценарий в scenarios/<имя>/scenario.md по образцу scenarios/_TEMPLATE/,
+     затем: /test-scenario <имя>  →  /finalize-scenario <имя>  →  npx playwright test
 
 scenarios/_auth.ts НЕ создан намеренно: его напишет фаза 2 под форму входа
 именно вашего приложения. Подробности: docs/agents-tests-guide.md в ките.`);
+
+  if (!loginUrlGiven) {
+    console.log(`
+⚠ --login-url не задан, подставлен дефолт "/login".
+  Если вход у приложения не по этому адресу — поправь "loginUrl" в
+  ~/.claude/agents/playwright-tester.auth.json, иначе агент пойдёт не туда.
+  Задать сразу: npx … init --base-url ${baseUrl} --login-url http://sso.example/auth`);
+  }
 }
 
 // ---------------------------------------------------------------- update

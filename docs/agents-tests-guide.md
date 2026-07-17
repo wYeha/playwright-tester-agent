@@ -10,6 +10,7 @@
 
 | Файл | Кто ведёт | Судьба |
 |---|---|---|
+| `~/.claude/agents/playwright-tester.auth.json` | **человек** | вне репозитория, ОДИН на все проекты |
 | `scenarios/<имя>/scenario.md` | **человек** | живёт долго, правится руками |
 | `{.claude,.cursor}/agents/playwright-tester.md` | кит | обновляется через `update` |
 | `{.claude,.cursor}/skills/*/SKILL.md` | кит | обновляется через `update` |
