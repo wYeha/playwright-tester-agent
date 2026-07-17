@@ -55,9 +55,14 @@ const PKG_DEV_DEPS = {
   playwright: '^1.61.1',
 };
 const GITIGNORE_LINES = [
+  // Кит приносит playwright в devDependencies. Если проект до этого не был
+  // JS-проектом, node_modules/ окажется неприкрытым — и уедет в git по `add .`.
+  'node_modules/',
   'test-results/',
   'scenarios/_playwright-report/',
   '.playwright-mcp/',
+  // Страховка: рабочий файл кредов живёт вне репозитория, но если кто-то
+  // создаст его внутри проекта по ошибке — пароль не утечёт.
   '.claude/agents/playwright-tester.auth.json',
 ];
 
@@ -125,10 +130,19 @@ function patchPackageJson(target) {
 function patchGitignore(target) {
   const p = path.join(target, '.gitignore');
   const cur = exists(p) ? read(p) : '';
-  const missing = GITIGNORE_LINES.filter((l) => !cur.split(/\r?\n/).includes(l));
+
+  // `node_modules` и `node_modules/` — одно и то же правило; не плодим дубли.
+  const norm = (l) => l.trim().replace(/\/$/, '');
+  const have = new Set(cur.split(/\r?\n/).map(norm));
+  const missing = GITIGNORE_LINES.filter((l) => !have.has(norm(l)));
   if (!missing.length) return [];
-  const block = (cur.endsWith('\n') || !cur ? '' : '\n') + '\n# playwright-tester-agent\n' + missing.join('\n') + '\n';
-  fs.writeFileSync(p, cur + block);
+
+  // Подстраиваемся под переводы строк файла: дописать LF в CRLF-файл — значит
+  // намусорить смешанными окончаниями.
+  const eol = cur.includes('\r\n') ? '\r\n' : '\n';
+  const lines = ['', '# playwright-tester-agent', ...missing, ''];
+  const lead = cur === '' || cur.endsWith('\n') ? '' : eol;
+  fs.writeFileSync(p, cur + lead + lines.join(eol));
   return missing;
 }
 
