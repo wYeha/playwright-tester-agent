@@ -2,7 +2,8 @@
 /**
  * playwright-tester-agent — развёртывание двухфазной системы E2E-тестов через ИИ-агентов.
  *
- *   npx github:wYeha/playwright-tester-agent init --base-url http://app.local
+ *   npx github:wYeha/playwright-tester-agent init \
+ *       --base-url http://app.local --login-url http://sso.local/auth
  *   npx github:wYeha/playwright-tester-agent update
  *
  * init   — разложить всё в проект (леса + общие файлы), подставить адреса.
@@ -221,7 +222,7 @@ function update(args) {
 
   if (!state) {
     console.error(`Ошибка: ${STATE_FILE} не найден — похоже, здесь не было init.`);
-    console.error('Сначала: npx github:wYeha/playwright-tester-agent init --base-url <url>');
+    console.error('Сначала: npx github:wYeha/playwright-tester-agent init --base-url <url> --login-url <url>');
     process.exit(1);
   }
 
@@ -290,15 +291,19 @@ else if (cmd === 'update') update(args);
 else {
   console.log(`playwright-tester-agent — E2E-тесты через ИИ-агентов
 
-  init --base-url <url> [--login-url <url>] [--target <dir>] [--force]
-      Развернуть систему в проекте. --login-url по умолчанию /login.
+  init --base-url <url> --login-url <url> [--target <dir>] [--force]
+      Развернуть систему в проекте.
+      --base-url   адрес приложения (обязателен)
+      --login-url  адрес страницы входа: абсолютный (auth на отдельном домене)
+                   или относительный. По умолчанию /login — опускайте только
+                   если вход действительно там, иначе агент пойдёт не туда.
 
   update [--target <dir>] [--force]
       Обновить только агентов, скиллы и фикстуру. Леса и сценарии не трогает.
       Локально изменённые файлы пропускает; --force перезаписывает.
 
 Примеры:
-  npx github:wYeha/playwright-tester-agent init --base-url http://app.local
   npx github:wYeha/playwright-tester-agent init --base-url http://app.local --login-url http://auth.local/auth
+  npx github:wYeha/playwright-tester-agent init --base-url http://app.local --login-url /signin
   npx github:wYeha/playwright-tester-agent update`);
 }
