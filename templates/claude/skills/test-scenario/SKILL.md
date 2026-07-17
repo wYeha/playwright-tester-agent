@@ -30,7 +30,9 @@ description: >-
    - Проверь, что настроен живой Playwright MCP-браузер (инструменты `mcp__playwright__*`).
      Если нет — подскажи добавить `.mcp.json` (см. README) и переоткрыть сессию. Он обязателен.
    - Проверь, что есть креды: `scenarios/auth.json` (или env
-     `TEST_USER`/`TEST_PASS`). Если файла нет — предложи создать из `.auth.example.json`.
+     `TEST_USER`/`TEST_PASS`). Если файла нет — скажи пользователю скопировать
+     `scenarios/auth.example.json` → `scenarios/auth.json` и вписать user/pass.
+     Сам не создавай: пароля ты не знаешь.
 
 3. **Запусти субагента `playwright-tester`** (синхронно — результат нужен сразу):
    - **Claude Code:** Agent tool, `subagent_type: "playwright-tester"`, `run_in_background: false`.
