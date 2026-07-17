@@ -6,6 +6,9 @@
     "playwright-tester-agent": "bin/agent-kit.js",
     "agent-kit": "bin/agent-kit.js"
   },
+  "scripts": {
+    "test": "node --test tests/agent-kit.test.js"
+  },
   "files": [
     "bin",
     "templates",

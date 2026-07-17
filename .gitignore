@@ -1,2 +1,13 @@
 node_modules/
 .DS_Store
+/TEST
+
+.claude
+.cursor
+
+# приватная памятка мейнтейнера — только для меня
+_MAINTAINER-versions-and-hashes.md
+
+# артефакты премортема
+premortem-report-*.html
+premortem-transcript-*.md

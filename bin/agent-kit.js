@@ -18,6 +18,10 @@ const crypto = require('crypto');
 const KIT_ROOT = path.join(__dirname, '..');
 const TPL = path.join(KIT_ROOT, 'templates');
 const STATE_FILE = '.agent-kit.json';
+// Версия СХЕМЫ хеширования в .agent-kit.json. Поднимай (2, 3, …) ТОЛЬКО когда меняешь сам
+// алгоритм sha() ниже. Тогда update перестаёт вслепую доверять старым хешам и переходит в
+// осторожный режим миграции вместо тихого «всё пропущено». Подробнее — в приватных заметках.
+const HASH_SCHEME = 1;
 
 // ---------------------------------------------------------------- раскладка
 
@@ -30,6 +34,9 @@ const SHARED = [
   ['cursor/skills/test-scenario/SKILL.md', '.cursor/skills/test-scenario/SKILL.md'],
   ['cursor/skills/finalize-scenario/SKILL.md', '.cursor/skills/finalize-scenario/SKILL.md'],
   ['scenarios/_fixtures.ts', 'scenarios/_fixtures.ts'],
+  // Диагностика окружения фазы 1. Плейсхолдеров нет (baseURL читает из playwright.config.ts
+  // в рантайме), поэтому живёт в SHARED и освежается через update.
+  ['playwright-doctor.js', 'scripts/playwright-doctor.js'],
 ];
 
 // Леса: ставятся один раз при init, дальше принадлежат проекту. `update` их не трогает.
@@ -45,6 +52,7 @@ const SCAFFOLD = [
 const PKG_SCRIPTS = {
   'playwright:install': 'playwright install chromium',
   'playwright:verify': 'node scripts/playwright-verify.js',
+  'playwright:doctor': 'node scripts/playwright-doctor.js',
   'playwright:mcp': 'node node_modules/@playwright/mcp/cli.js --browser chromium --port 8931',
   'test:e2e': 'playwright test',
   'test:e2e:ui': 'playwright test --ui',
@@ -184,6 +192,7 @@ function init(args) {
   const gi = patchGitignore(target);
   if (gi.length) console.log(`  ~ .gitignore: ${gi.length} строк`);
 
+  state.hashScheme = HASH_SCHEME;
   saveState(target, state);
 
   if (skipped.length) {
@@ -245,6 +254,14 @@ function update(args) {
   const local = [];
   const same = [];
 
+  // Схема хешей в .agent-kit.json. Схема 0 (поля hashScheme нет) — это та же схема 1, просто
+  // без метки: алгоритм sha() тот же, значит старые хеши сравнимы. Несравнимыми они становятся,
+  // только если реально сменили алгоритм и подняли HASH_SCHEME — тогда доверять старым хешам
+  // нельзя, и мы из осторожности не затираем расходящиеся файлы (защита от тихой потери правок
+  // ИЛИ тихого проглатывания всех обновлений).
+  const priorScheme = state.hashScheme || 0;
+  const hashesComparable = priorScheme === 0 || priorScheme === HASH_SCHEME;
+
   for (const [src, dst] of SHARED) {
     const destPath = path.join(target, dst);
     const fresh = read(path.join(TPL, src)); // в SHARED плейсхолдеров нет
@@ -259,13 +276,14 @@ function update(args) {
 
     const curHash = sha(read(destPath));
     if (curHash === freshHash) {
+      state.files[dst] = freshHash; // пере-штампуем хеш текущей схемой
       same.push(dst);
       continue;
     }
 
     // Файл отличается от версии кита. Правили локально или он просто устарел?
     const knownHash = state.files[dst];
-    const editedLocally = knownHash && curHash !== knownHash;
+    const editedLocally = hashesComparable ? Boolean(knownHash && curHash !== knownHash) : true;
 
     if (editedLocally && !force) {
       local.push(dst);
@@ -276,6 +294,7 @@ function update(args) {
     changed.push(dst);
   }
 
+  state.hashScheme = HASH_SCHEME;
   saveState(target, state);
 
   if (changed.length) {
@@ -286,6 +305,12 @@ function update(args) {
   if (local.length) {
     console.log(`\n⚠ Правились локально — НЕ трогал:`);
     local.forEach((f) => console.log(`    · ${f}`));
+    if (!hashesComparable) {
+      console.log(`
+  ВНИМАНИЕ: сменилась схема хешей (${priorScheme} → ${HASH_SCHEME}) — старые хеши несравнимы,
+  поэтому ВСЕ различающиеся файлы помечены «правленными» из осторожности. Сверь их глазами:
+  если правок не было — обнови через --force.`);
+    }
     console.log(`
   Эти файлы разошлись с китом после init. Варианты:
     · посмотреть разницу и перенести правку в кит (если она общеполезна);
@@ -297,13 +322,14 @@ function update(args) {
 
 // ---------------------------------------------------------------- main
 
-const args = parseArgs(process.argv.slice(2));
-const cmd = args._[0];
+function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const cmd = args._[0];
 
-if (cmd === 'init') init(args);
-else if (cmd === 'update') update(args);
-else {
-  console.log(`playwright-tester-agent — E2E-тесты через ИИ-агентов
+  if (cmd === 'init') init(args);
+  else if (cmd === 'update') update(args);
+  else {
+    console.log(`playwright-tester-agent — E2E-тесты через ИИ-агентов
 
   init --base-url <url> --login-url <url> [--target <dir>] [--force]
       Развернуть систему в проекте.
@@ -316,8 +342,19 @@ else {
       Обновить только агентов, скиллы и фикстуру. Леса и сценарии не трогает.
       Локально изменённые файлы пропускает; --force перезаписывает.
 
+  После init в проекте доступна диагностика окружения: npm run playwright:doctor
+
 Примеры:
   npx github:wYeha/playwright-tester-agent init --base-url http://app.local --login-url http://auth.local/auth
   npx github:wYeha/playwright-tester-agent init --base-url http://app.local --login-url /signin
   npx github:wYeha/playwright-tester-agent update`);
+  }
 }
+
+// Запуск как CLI — выполняем; require() из тестов — только экспортируем функции.
+if (require.main === module) main();
+
+module.exports = {
+  init, update, patchPackageJson, patchGitignore, parseArgs, render, sha,
+  HASH_SCHEME, STATE_FILE, SHARED, SCAFFOLD, PKG_SCRIPTS, PKG_DEV_DEPS, GITIGNORE_LINES,
+};
